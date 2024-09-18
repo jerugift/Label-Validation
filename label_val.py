@@ -12,7 +12,7 @@ import pandas as pd
 # Example rules stored in a dictionary
 rules = {
     "Rule-1": "Drug Facts",
-    "Rule-2": "Drug Facts (continued)",    
+    "Rule-2": r"Drug Facts\s*\(continued\)",    
     "Rule-3": "Active ingredients",    
     "Rule-4": "Purposes",    
     "Rule-5": "Uses",   
@@ -42,15 +42,43 @@ def validate_label(text, rules):
     report = {}
     for rule_name, rule_pattern in rules.items():
         if re.search(rule_pattern, text):
-            report[rule_pattern] = "Yes"
+            if rule_pattern==r"Drug Facts\s*\(continued\)":
+                report["Drug Facts (continued)"] = "Yes"
+            else:
+                report[rule_pattern] = "Yes"
         elif rule_name in other_rules.keys():
             if re.search(other_rules[rule_name], text):
-                report[other_rules[rule_name]] = "Yes"
+                if other_rules[rule_name]==r"Drug Facts\s*\(continued\)":
+                    report["Drug Facts (continued)"] = "Yes"
+                else:
+                    report[other_rules[rule_name]] = "Yes"
+            else:
+                if rule_pattern==r"Drug Facts\s*\(continued\)":
+                    report["Drug Facts (continued)"] = "No"
+                else:
+                    report[rule_pattern] = "No"
+        else:
+            if rule_pattern==r"Drug Facts\s*\(continued\)":
+                report["Drug Facts (continued)"] = "No"
             else:
                 report[rule_pattern] = "No"
-        else:
-            report[rule_pattern] = "No"
+
     return report
+
+
+# def validate_label(text, rules):
+#     report = {}
+#     for rule_name, rule_pattern in rules.items():
+#         if re.search(rule_pattern, text):
+#             report[rule_pattern] = "Yes"
+#         elif rule_name in other_rules.keys():
+#             if re.search(other_rules[rule_name], text):
+#                 report[other_rules[rule_name]] = "Yes"
+#             else:
+#                 report[rule_pattern] = "No"
+#         else:
+#             report[rule_pattern] = "No"
+#     return report
 
 # Streamlit UI
 def sidebar_bg(side_bg):
@@ -89,7 +117,7 @@ st.title(":blue[Label Validation System]")
 
 
 # Input for drug name
-details = st.text_input("Enter the name of your Drug:")
+# details = st.text_input("Enter the name of your Drug:")
 
 # File uploader for text files (single file)
 uploaded_file = st.file_uploader("Please upload your label (text file)", type=['jpg', 'png', "jpeg", 'jfif'])
@@ -116,13 +144,13 @@ if uploaded_file is not None:
     # Display the validation report
         st.header("Validation Report")
         v_report=pd.DataFrame.from_dict(validation_report, orient='index')
-        table_bg=f"""
-   <style>   
-    [data-testid="stTableStyledTable"] {{
-    background: linear-gradient(180deg, #dbdeff, #dbdeff, #687eff);}}  
+#         table_bg=f"""
+#    <style>   
+#     [data-testid="stTableStyledTable"] {{
+#     background: linear-gradient(180deg, #dbdeff, #dbdeff, #687eff);}}  
 
-    </style>
-   """
+#     </style>
+#    """
         st.table(v_report)
 
 else:
